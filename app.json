@@ -1,25 +1,65 @@
 {
   "expo": {
-    "name": "DrinkScore",
-    "slug": "DrinkScore",
+    "name": "Blackout",
+    "slug": "Blackout",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
+    "scheme": "blackout",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.jlucaslacy.blackout",
+      "usesAppleSignIn": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Blackout necesita tu cámara para capturar fotos y videos en las pedas",
+        "NSMicrophoneUsageDescription": "Blackout necesita tu micrófono para grabar videos en las pedas",
+        "NSLocationWhenInUseUsageDescription": "Blackout usa tu ubicación para mostrarte pedas cercanas"
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0a0a0a",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "package": "com.blackout.app",
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-apple-authentication",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Blackout necesita tu cámara para capturar momentos en las pedas",
+          "microphonePermission": "Blackout necesita tu micrófono para grabar videos con audio",
+          "recordAudioAndroid": true
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Blackout usa tu ubicación para mostrarte pedas cercanas"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#f97316"
+        }
+      ],
+      "@react-native-community/datetimepicker"
+    ]
   }
 }
