@@ -25,6 +25,7 @@ export interface Peda {
   invite_code: string | null;
   created_by: string;
   attendee_count: number;
+  emoji: string;
   created_at: string;
 }
 
@@ -40,6 +41,7 @@ export interface NearbyPeda {
   distance_km: number;
   lat: number;
   lng: number;
+  emoji: string;
 }
 
 export interface PedaAttendee {
@@ -62,6 +64,7 @@ export interface Post {
   moderation_status: ModerationStatus;
   like_count: number;
   comment_count: number;
+  blur_data: string | null;
   created_at: string;
   profiles?: Profile;
   liked_by_me?: boolean;

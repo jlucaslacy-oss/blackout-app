@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Alert,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { Ionicons } from "@expo/vector-icons";
@@ -15,6 +16,7 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
 
   async function signInWithApple() {
+    if (loading) return;
     try {
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
@@ -23,7 +25,10 @@ export default function LoginScreen() {
         ],
       });
       if (!credential.identityToken) {
-        Alert.alert("Error", "No se pudo autenticar con Apple");
+        Alert.alert(
+          "Ups",
+          "No se pudo iniciar sesión con Apple. Inténtalo de nuevo."
+        );
         return;
       }
       setLoading(true);
@@ -31,12 +36,15 @@ export default function LoginScreen() {
         provider: "apple",
         token: credential.identityToken,
       });
-      setLoading(false);
-      if (error) Alert.alert("Error", error.message);
+      if (error) {
+        Alert.alert("Ups", "No se pudo iniciar sesión. Inténtalo de nuevo.");
+      }
     } catch (e: any) {
       if (e.code !== "ERR_REQUEST_CANCELED") {
-        Alert.alert("Error", e.message);
+        Alert.alert("Ups", "No se pudo iniciar sesión. Inténtalo de nuevo.");
       }
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -54,17 +62,24 @@ export default function LoginScreen() {
         <Text style={styles.tagline}>WHERE THE NIGHT LIVES</Text>
 
         {Platform.OS === "ios" && (
-          <AppleAuthentication.AppleAuthenticationButton
-            buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-            buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
-            cornerRadius={radii.sm}
-            style={styles.appleButton}
-            onPress={signInWithApple}
-          />
+          <View style={styles.appleButtonWrap} pointerEvents={loading ? "none" : "auto"}>
+            <AppleAuthentication.AppleAuthenticationButton
+              buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
+              cornerRadius={radii.sm}
+              style={[styles.appleButton, loading && styles.appleButtonLoading]}
+              onPress={signInWithApple}
+            />
+            {loading && (
+              <View style={styles.loadingOverlay}>
+                <ActivityIndicator color={colors.background} />
+              </View>
+            )}
+          </View>
         )}
 
         <Text style={styles.disclaimer}>
-          Debes tener 18+ años para usar Blackout.
+          Solo para mayores de 18 años.
         </Text>
       </View>
     </View>
@@ -109,9 +124,24 @@ const styles = StyleSheet.create({
     marginBottom: 80,
     fontWeight: "500",
   },
+  appleButtonWrap: {
+    width: "100%",
+  },
   appleButton: {
     height: 52,
     width: "100%",
+  },
+  appleButtonLoading: {
+    opacity: 0.6,
+  },
+  loadingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
   },
   disclaimer: {
     color: colors.textDim,

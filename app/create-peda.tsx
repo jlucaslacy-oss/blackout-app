@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -7,9 +7,10 @@ import {
   Switch,
   TouchableOpacity,
   Alert,
+  FlatList,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import MapView, { Marker, Region } from "react-native-maps";
+import MapView, { Region } from "react-native-maps";
 import * as Location from "expo-location";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -20,6 +21,12 @@ import Input from "../components/Input";
 import { colors, spacing, fonts, radii } from "../components/theme";
 
 const generateCode = customAlphabet("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", 6);
+
+const EMOJI_OPTIONS = [
+  "🎉", "🔥", "🍻", "🎶", "🪩", "💀", "👻", "🌙",
+  "⚡", "🎤", "🍾", "🥂", "🎊", "💃", "🕺", "🌮",
+  "🎸", "🏖️", "🌴", "🎯", "🪅", "🍺", "🎭", "🤙",
+];
 
 const DURATION_OPTIONS = [
   { label: "6h", hours: 6 },
@@ -34,9 +41,15 @@ export default function CreatePedaScreen() {
   const [pin, setPin] = useState({ latitude: 23.2494, longitude: -106.4111 });
   const [address, setAddress] = useState("");
   const [durationHours, setDurationHours] = useState(6);
+  const [emoji, setEmoji] = useState<string | null>(null);
+  const [emojiOpen, setEmojiOpen] = useState(false);
   const [isPrivate, setIsPrivate] = useState(false);
   const [inviteCode] = useState(generateCode());
   const [loading, setLoading] = useState(false);
+  const mapRef = useRef<MapView>(null);
+  const userMovedMap = useRef(false);
+  const geocodeSeq = useRef(0);
+  const geocodeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -45,32 +58,53 @@ export default function CreatePedaScreen() {
       const loc = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
-      setPin({
+      // If the user already dragged the map to the party spot, don't yank
+      // the pin back to their GPS position.
+      if (userMovedMap.current) return;
+      const coords = {
         latitude: loc.coords.latitude,
         longitude: loc.coords.longitude,
-      });
+      };
+      setPin(coords);
+      mapRef.current?.animateToRegion(
+        { ...coords, latitudeDelta: 0.01, longitudeDelta: 0.01 },
+        400
+      );
+      // Fill in the address right away instead of waiting for a map move.
+      reverseGeocode(coords.latitude, coords.longitude);
     })();
   }, []);
 
-  async function reverseGeocode(lat: number, lng: number) {
-    try {
-      const results = await Location.reverseGeocodeAsync({
-        latitude: lat,
-        longitude: lng,
-      });
-      if (results.length > 0) {
-        const r = results[0];
-        const parts = [r.street, r.district, r.city].filter(Boolean);
-        setAddress(parts.join(", "));
+  function reverseGeocode(lat: number, lng: number) {
+    if (geocodeTimer.current) clearTimeout(geocodeTimer.current);
+    geocodeTimer.current = setTimeout(async () => {
+      const seq = ++geocodeSeq.current;
+      try {
+        const results = await Location.reverseGeocodeAsync({
+          latitude: lat,
+          longitude: lng,
+        });
+        // Ignore out-of-order responses from older pin positions
+        if (seq !== geocodeSeq.current) return;
+        if (results.length > 0) {
+          const r = results[0];
+          const parts = [r.street, r.district, r.city].filter(Boolean);
+          setAddress(parts.join(", "));
+        }
+      } catch {
+        // Keep the last good address instead of blanking it
       }
-    } catch {
-      setAddress("");
-    }
+    }, 400);
   }
 
   async function handleCreate() {
     if (!name.trim()) {
-      Alert.alert("Error", "Dale un nombre a tu peda");
+      Alert.alert("Ups", "Ponle nombre a tu peda");
+      return;
+    }
+    if (!emoji) {
+      Alert.alert("Ups", "Elige un emoji para tu peda");
+      setEmojiOpen(true);
       return;
     }
 
@@ -94,6 +128,7 @@ export default function CreatePedaScreen() {
         address: address || null,
         starts_at: now.toISOString(),
         expires_at: expiresAt.toISOString(),
+        emoji,
         is_private: isPrivate,
         invite_code: isPrivate ? inviteCode : null,
         created_by: user.id,
@@ -102,7 +137,7 @@ export default function CreatePedaScreen() {
       .single();
 
     if (error) {
-      Alert.alert("Error", error.message);
+      Alert.alert("Ups", "No se pudo crear la peda. Inténtalo de nuevo.");
       setLoading(false);
       return;
     }
@@ -115,19 +150,25 @@ export default function CreatePedaScreen() {
     router.replace(`/peda/${data.id}`);
   }
 
-  const mapRegion: Region = {
+  // Uncontrolled map (initialRegion + ref): a controlled `region` with fixed
+  // deltas snaps the zoom back after every pinch.
+  const initialRegion = useRef<Region>({
     ...pin,
     latitudeDelta: 0.01,
     longitudeDelta: 0.01,
-  };
+  }).current;
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          accessibilityLabel="Cerrar"
+        >
           <Ionicons name="close" size={28} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Nueva Peda</Text>
+        <Text style={styles.headerTitle}>Nueva peda</Text>
         <View style={{ width: 28 }} />
       </View>
 
@@ -140,28 +181,68 @@ export default function CreatePedaScreen() {
           maxLength={60}
         />
 
+        <TouchableOpacity
+          style={styles.emojiToggle}
+          onPress={() => setEmojiOpen((o) => !o)}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.sectionLabel}>Emoji</Text>
+          <View style={styles.emojiToggleRight}>
+            {emoji ? (
+              <Text style={styles.emojiSelected}>{emoji}</Text>
+            ) : (
+              <Text style={styles.emojiPlaceholder}>Elegir</Text>
+            )}
+            <Ionicons
+              name={emojiOpen ? "chevron-up" : "chevron-down"}
+              size={18}
+              color={colors.textDim}
+            />
+          </View>
+        </TouchableOpacity>
+        {emojiOpen && (
+          <View style={styles.emojiGrid}>
+            {EMOJI_OPTIONS.map((e) => (
+              <TouchableOpacity
+                key={e}
+                style={[
+                  styles.emojiChip,
+                  emoji === e && styles.emojiChipActive,
+                ]}
+                onPress={() => {
+                  setEmoji(e);
+                  setEmojiOpen(false);
+                }}
+              >
+                <Text style={styles.emojiText}>{e}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
         <Text style={styles.sectionLabel}>Ubicación</Text>
+        <Text style={styles.mapHint}>Mueve el mapa para ajustar el pin</Text>
         <View style={styles.mapContainer}>
           <MapView
+            ref={mapRef}
             style={styles.miniMap}
-            region={mapRegion}
+            initialRegion={initialRegion}
             userInterfaceStyle="dark"
             scrollEnabled
             zoomEnabled
-            onRegionChangeComplete={(region) => {
+            onRegionChangeComplete={(region, details) => {
+              if (details?.isGesture !== false) userMovedMap.current = true;
               setPin({
                 latitude: region.latitude,
                 longitude: region.longitude,
               });
               reverseGeocode(region.latitude, region.longitude);
             }}
-          >
-            <Marker coordinate={pin} draggable onDragEnd={(e) => {
-              const { latitude, longitude } = e.nativeEvent.coordinate;
-              setPin({ latitude, longitude });
-              reverseGeocode(latitude, longitude);
-            }} />
-          </MapView>
+          />
+          {/* Fixed center pin: the map moves underneath, the pin stays put */}
+          <View style={styles.centerPin} pointerEvents="none">
+            <Ionicons name="location-sharp" size={36} color={colors.accent} />
+          </View>
         </View>
         {address ? (
           <Text style={styles.addressText}>{address}</Text>
@@ -194,14 +275,15 @@ export default function CreatePedaScreen() {
           <View style={styles.privateInfo}>
             <Text style={styles.privateLabel}>Peda privada</Text>
             <Text style={styles.privateDesc}>
-              Solo invitados pueden ver el contenido
+              Solo los invitados pueden ver el contenido
             </Text>
           </View>
           <Switch
             value={isPrivate}
             onValueChange={setIsPrivate}
             trackColor={{ false: colors.border, true: colors.accent }}
-            thumbColor={colors.text}
+            thumbColor={isPrivate ? colors.background : colors.text}
+            ios_backgroundColor={colors.border}
           />
         </View>
 
@@ -252,6 +334,45 @@ const styles = StyleSheet.create({
     marginTop: spacing.xxl,
     marginBottom: spacing.sm,
   },
+  emojiToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    minHeight: 44,
+  },
+  emojiToggleRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  emojiSelected: {
+    fontSize: 24,
+  },
+  emojiPlaceholder: {
+    color: colors.textDim,
+    fontSize: fonts.body,
+  },
+  emojiGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+  },
+  emojiChip: {
+    width: 44,
+    height: 44,
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  emojiChipActive: {
+    borderColor: colors.accent,
+    backgroundColor: colors.surface,
+  },
+  emojiText: {
+    fontSize: 22,
+  },
   mapContainer: {
     height: 200,
     borderRadius: radii.md,
@@ -259,6 +380,22 @@ const styles = StyleSheet.create({
   },
   miniMap: {
     flex: 1,
+  },
+  mapHint: {
+    color: colors.textDim,
+    fontSize: fonts.caption,
+    marginBottom: spacing.sm,
+  },
+  centerPin: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    // Lift the icon so its tip sits on the map center
+    paddingBottom: 32,
   },
   addressText: {
     color: colors.textMuted,
@@ -287,7 +424,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   durationTextActive: {
-    color: colors.text,
+    color: colors.background,
   },
   privateRow: {
     flexDirection: "row",

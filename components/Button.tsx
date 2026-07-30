@@ -43,7 +43,9 @@ export default function Button({
       activeOpacity={0.7}
     >
       {loading ? (
-        <ActivityIndicator color={variant === "outline" ? colors.accent : colors.text} />
+        <ActivityIndicator
+          color={variant === "primary" ? colors.background : colors.text}
+        />
       ) : (
         <Text
           style={[

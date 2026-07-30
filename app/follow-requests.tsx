@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -7,14 +7,20 @@ import {
   TouchableOpacity,
   TextInput,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import * as Haptics from "expo-haptics";
 import { supabase } from "../lib/supabase";
 import { Profile } from "../lib/types";
+import { notify } from "../lib/notifications";
 import Avatar from "../components/Avatar";
 import { colors, spacing, fonts, radii } from "../components/theme";
+
+const HIT_SLOP = { top: 12, bottom: 12, left: 12, right: 12 };
+const SEARCH_DEBOUNCE_MS = 300;
 
 interface FollowRequest {
   id: string;
@@ -35,7 +41,10 @@ export default function FollowRequestsScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
+  const [searchSettled, setSearchSettled] = useState(false);
   const [myId, setMyId] = useState<string | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latestQueryRef = useRef("");
 
   const fetchRequests = useCallback(async () => {
     const {
@@ -56,48 +65,83 @@ export default function FollowRequestsScreen() {
 
   useEffect(() => {
     fetchRequests();
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, [fetchRequests]);
 
   async function acceptRequest(followId: string) {
-    await supabase
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const request = requests.find((r) => r.id === followId);
+    const prevRequests = requests;
+    setRequests((prev) => prev.filter((r) => r.id !== followId));
+    const { error } = await supabase
       .from("follows")
       .update({ status: "accepted" })
       .eq("id", followId);
-    setRequests((prev) => prev.filter((r) => r.id !== followId));
+    if (error) {
+      setRequests(prevRequests);
+      Alert.alert("Error", "No se pudo aceptar la solicitud. Intenta de nuevo.");
+      return;
+    }
+    if (request) {
+      notify(request.follower_id, "follow_accepted");
+    }
   }
 
   async function declineRequest(followId: string) {
-    await supabase
+    const prevRequests = requests;
+    setRequests((prev) => prev.filter((r) => r.id !== followId));
+    const { error } = await supabase
       .from("follows")
       .update({ status: "declined" })
       .eq("id", followId);
-    setRequests((prev) => prev.filter((r) => r.id !== followId));
+    if (error) {
+      setRequests(prevRequests);
+      Alert.alert("Error", "No se pudo rechazar la solicitud. Intenta de nuevo.");
+    }
   }
 
-  async function searchUsers(query: string) {
+  function onChangeSearch(query: string) {
     setSearchQuery(query);
+    latestQueryRef.current = query;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
     if (query.trim().length < 2) {
       setSearchResults([]);
+      setSearching(false);
+      setSearchSettled(false);
       return;
     }
+
     setSearching(true);
+    setSearchSettled(false);
+    debounceRef.current = setTimeout(() => {
+      runSearch(query);
+    }, SEARCH_DEBOUNCE_MS);
+  }
+
+  async function runSearch(query: string) {
     const { data } = await supabase
       .from("profiles")
       .select("id, username, avatar_url")
       .ilike("username", `%${query.trim()}%`)
       .neq("id", myId)
       .limit(20);
+    // Guard against stale out-of-order responses
+    if (latestQueryRef.current !== query) return;
     setSearchResults((data as SearchResult[]) ?? []);
     setSearching(false);
+    setSearchSettled(true);
   }
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.topBar}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => router.back()} hitSlop={HIT_SLOP}>
           <Ionicons name="chevron-back" size={28} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.title}>Personas</Text>
+        <Text style={styles.title}>Gente</Text>
         <View style={{ width: 28 }} />
       </View>
 
@@ -106,25 +150,33 @@ export default function FollowRequestsScreen() {
         <TextInput
           style={styles.searchInput}
           value={searchQuery}
-          onChangeText={searchUsers}
-          placeholder="Buscar personas..."
+          onChangeText={onChangeSearch}
+          placeholder="Buscar gente..."
           placeholderTextColor={colors.textDim}
           autoCapitalize="none"
           autoCorrect={false}
         />
+        {searching && (
+          <ActivityIndicator size="small" color={colors.textDim} />
+        )}
         {searchQuery.length > 0 && (
           <TouchableOpacity
             onPress={() => {
+              if (debounceRef.current) clearTimeout(debounceRef.current);
+              latestQueryRef.current = "";
               setSearchQuery("");
               setSearchResults([]);
+              setSearching(false);
+              setSearchSettled(false);
             }}
+            hitSlop={HIT_SLOP}
           >
             <Ionicons name="close-circle" size={18} color={colors.textDim} />
           </TouchableOpacity>
         )}
       </View>
 
-      {searchQuery.length >= 2 ? (
+      {searchQuery.trim().length >= 2 ? (
         <FlatList
           data={searchResults}
           keyExtractor={(item) => item.id}
@@ -147,8 +199,8 @@ export default function FollowRequestsScreen() {
             </TouchableOpacity>
           )}
           ListEmptyComponent={
-            !searching ? (
-              <Text style={styles.emptyText}>No se encontraron usuarios</Text>
+            !searching && searchSettled ? (
+              <Text style={styles.emptyText}>No encontramos a nadie</Text>
             ) : null
           }
         />
@@ -184,7 +236,7 @@ export default function FollowRequestsScreen() {
                   >
                     <Ionicons
                       name="checkmark"
-                      size={20}
+                      size={22}
                       color={colors.background}
                     />
                   </TouchableOpacity>
@@ -192,7 +244,7 @@ export default function FollowRequestsScreen() {
                     style={styles.declineBtn}
                     onPress={() => declineRequest(item.id)}
                   >
-                    <Ionicons name="close" size={20} color={colors.text} />
+                    <Ionicons name="close" size={22} color={colors.text} />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -204,9 +256,9 @@ export default function FollowRequestsScreen() {
                   size={48}
                   color={colors.textDimmer}
                 />
-                <Text style={styles.emptyTitle}>Sin solicitudes</Text>
+                <Text style={styles.emptyTitle}>No tienes solicitudes</Text>
                 <Text style={styles.emptySubtext}>
-                  Busca personas para seguirlas
+                  Busca gente para seguir
                 </Text>
               </View>
             }
@@ -267,6 +319,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.surface,
+    minHeight: 44,
   },
   userRowName: {
     color: colors.text,
@@ -295,17 +348,17 @@ const styles = StyleSheet.create({
   },
   acceptBtn: {
     backgroundColor: colors.accent,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: "center",
     alignItems: "center",
   },
   declineBtn: {
     backgroundColor: colors.surface,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,

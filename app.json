@@ -2,7 +2,7 @@
   "expo": {
     "name": "Blackout",
     "slug": "Blackout",
-    "version": "1.0.0",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -11,10 +11,17 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.jlucaslacy.blackout",
       "usesAppleSignIn": true,
+      "entitlements": {
+        "aps-environment": "production"
+      },
       "infoPlist": {
-        "NSCameraUsageDescription": "Blackout necesita tu cámara para capturar fotos y videos en las pedas",
-        "NSMicrophoneUsageDescription": "Blackout necesita tu micrófono para grabar videos en las pedas",
-        "NSLocationWhenInUseUsageDescription": "Blackout usa tu ubicación para mostrarte pedas cercanas"
+        "NSCameraUsageDescription": "Blackout needs your camera to capture photos and videos at parties",
+        "NSMicrophoneUsageDescription": "Blackout needs your microphone to record videos at parties",
+        "NSLocationWhenInUseUsageDescription": "Blackout uses your location to show nearby parties",
+        "NSPhotoLibraryUsageDescription": "Blackout needs access to your photo library to set your profile picture",
+        "NSContactsUsageDescription": "Blackout usa tus contactos para ayudarte a encontrar a tus amigos en la app",
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": ["remote-notification"]
       }
     },
     "android": {
@@ -26,10 +33,10 @@
       },
       "package": "com.blackout.app",
       "permissions": [
-        "CAMERA",
-        "RECORD_AUDIO",
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
       ]
     },
     "web": {
@@ -42,15 +49,15 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Blackout necesita tu cámara para capturar momentos en las pedas",
-          "microphonePermission": "Blackout necesita tu micrófono para grabar videos con audio",
+          "cameraPermission": "Blackout needs your camera to capture moments at parties",
+          "microphonePermission": "Blackout needs your microphone to record videos with audio",
           "recordAudioAndroid": true
         }
       ],
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Blackout usa tu ubicación para mostrarte pedas cercanas"
+          "locationWhenInUsePermission": "Blackout uses your location to show nearby parties"
         }
       ],
       [
@@ -59,7 +66,27 @@
           "color": "#f97316"
         }
       ],
-      "@react-native-community/datetimepicker"
-    ]
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Blackout needs access to your photo library to set your profile picture"
+        }
+      ],
+      "@react-native-community/datetimepicker",
+      "expo-image",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Blackout needs access to your photo library to save party photos",
+          "savePhotosPermission": "Blackout needs permission to save photos to your library"
+        }
+      ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d50c5d58-c117-4cd0-a3aa-419183b577d3"
+      }
+    }
   }
 }
