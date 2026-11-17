@@ -132,7 +132,23 @@
       // Count the page view as "lpv_<source>" so we can compare visits vs taps.
       // It hits the same counter. Browsers refuse a no-cors fetch unless it
       // follows redirects, so it follows (the App Store reply is discarded).
-      try { fetch(GO + "?s=lpv_" + encodeURIComponent(s), { mode: "no-cors", keepalive: true, cache: "no-store" }).catch(function () {}); } catch (e) {}
+      function ping(tag) {
+        try { fetch(GO + "?s=" + tag + "_" + encodeURIComponent(s), { mode: "no-cors", keepalive: true, cache: "no-store" }).catch(function () {}); } catch (e) {}
+      }
+      ping("lpv");
+      // Engagement: "lp5s" = stayed 5s with the page visible, "lpsc" = scrolled
+      // down or swiped the screenshots. Tells a bounce from someone who read it.
+      var shown = 0, last = Date.now(), done5 = false, doneSc = false;
+      function tick() {
+        if (done5) return;
+        if (document.visibilityState === "visible") shown += Date.now() - last;
+        last = Date.now();
+        if (shown >= 5000) { done5 = true; ping("lp5s"); } else setTimeout(tick, 500);
+      }
+      setTimeout(tick, 500);
+      function scrolled() { if (!doneSc) { doneSc = true; ping("lpsc"); } }
+      window.addEventListener("scroll", function () { if (window.scrollY > 120) scrolled(); }, { passive: true });
+      document.querySelector(".shots").addEventListener("scroll", function () { if (this.scrollLeft > 60) scrolled(); }, { passive: true });
       // Sticky bar once the main button is off screen.
       var cta = document.getElementById("cta"), bar = document.getElementById("bar");
       if ("IntersectionObserver" in window) {
