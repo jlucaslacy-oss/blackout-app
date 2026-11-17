@@ -130,8 +130,9 @@
       // Every download link carries the traffic source (?s=ig_ad_traffic etc.).
       document.querySelectorAll("a.go").forEach(function (a) { a.href = GO + "?s=" + encodeURIComponent(s); });
       // Count the page view as "lpv_<source>" so we can compare visits vs taps.
-      // It hits the same counter; it's never followed (redirect: manual).
-      try { fetch(GO + "?s=lpv_" + encodeURIComponent(s), { mode: "no-cors", redirect: "manual", keepalive: true, cache: "no-store" }); } catch (e) {}
+      // It hits the same counter. Browsers refuse a no-cors fetch unless it
+      // follows redirects, so it follows (the App Store reply is discarded).
+      try { fetch(GO + "?s=lpv_" + encodeURIComponent(s), { mode: "no-cors", keepalive: true, cache: "no-store" }).catch(function () {}); } catch (e) {}
       // Sticky bar once the main button is off screen.
       var cta = document.getElementById("cta"), bar = document.getElementById("bar");
       if ("IntersectionObserver" in window) {
