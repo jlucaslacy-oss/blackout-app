@@ -10,68 +10,133 @@
   <meta property="og:title" content="Danzo · See who's out in Dallas">
   <meta property="og:description" content="Game days, rooftops, run clubs. See what's live near you right now, and who's there.">
   <meta property="og:image" content="https://jlucaslacy-oss.github.io/blackout-app/get/phone-map.jpg">
-  <meta name="theme-color" content="#000000">
+  <meta name="theme-color" content="#0a0a0a">
   <meta name="apple-itunes-app" content="app-id=6781531385">
+  <link rel="preconnect" href="https://eryogltkczyqqbczreum.supabase.co">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@900&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { background: #000; color: #fff; }
+    :root { --bg: #0a0a0a; --surface: #1a1a1a; --line: #262626; --muted: #8a8a8a; --text: #fff; }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { background: var(--bg); color: var(--text); }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
       -webkit-font-smoothing: antialiased;
-      min-height: 100svh;
-      display: flex; flex-direction: column; align-items: center; text-align: center;
-      padding: max(28px, env(safe-area-inset-top)) 22px max(24px, env(safe-area-inset-bottom));
-      background: radial-gradient(120% 55% at 50% 0%, rgba(255,255,255,.11), transparent 60%), #000;
+      padding: max(18px, env(safe-area-inset-top)) 0 calc(96px + env(safe-area-inset-bottom));
     }
-    .wordmark { width: 170px; margin-top: 6px; }
-    h1 { font-size: 40px; line-height: 1.02; font-weight: 900; letter-spacing: -1.2px; margin-top: 28px; }
-    .sub { font-size: 17px; line-height: 1.4; color: #b8b8b8; margin-top: 12px; max-width: 340px; }
+    a { color: inherit; text-decoration: none; }
+    .wrap { max-width: 440px; margin: 0 auto; padding: 0 18px; }
+
+    /* App Store style card: what people expect after tapping an app ad */
+    .app { display: flex; align-items: center; gap: 14px; padding: 6px 0 18px; }
+    .icon { width: 72px; height: 72px; border-radius: 17px; border: 1px solid #2a2a2a; flex: none; }
+    .meta { flex: 1; min-width: 0; }
+    .name { font-size: 20px; font-weight: 700; letter-spacing: -.3px; }
+    .tag { font-size: 14px; color: var(--muted); margin-top: 2px; }
+    .get {
+      flex: none; background: #fff; color: #000; font-weight: 800; font-size: 15px;
+      padding: 8px 20px; border-radius: 999px;
+    }
+
+    h1 {
+      font-family: "Archivo", -apple-system, system-ui, sans-serif; font-weight: 900;
+      text-transform: uppercase; font-size: 44px; line-height: .95; letter-spacing: -1.4px;
+      margin-top: 6px;
+    }
+    h1 span { color: rgba(255,255,255,.38); }
+    .sub { font-size: 17px; line-height: 1.4; color: #c4c4c4; margin-top: 12px; }
+
     .cta {
-      display: block; width: 100%; max-width: 360px; margin-top: 24px;
-      background: #fff; color: #000; text-decoration: none;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; margin-top: 20px; background: #fff; color: #000;
       font-size: 18px; font-weight: 800; padding: 17px 20px; border-radius: 16px;
     }
-    .cta:active { transform: scale(.98); }
-    .free { font-size: 13px; color: #8a8a8a; margin-top: 10px; }
-    .phone { width: 74%; max-width: 280px; margin-top: 28px; border-radius: 34px; box-shadow: 0 30px 80px rgba(255,255,255,.08); }
-    ul { list-style: none; margin-top: 28px; max-width: 360px; width: 100%; text-align: left; }
-    li { padding: 14px 0; border-top: 1px solid #1d1d1d; font-size: 16px; line-height: 1.35; color: #d6d6d6; }
-    li b { color: #fff; display: block; font-size: 17px; margin-bottom: 2px; }
-    .cta2 { margin-top: 26px; }
-    footer { margin-top: 28px; font-size: 12px; color: #666; }
+    .cta:active, .get:active { transform: scale(.98); }
+    .cta svg { width: 18px; height: 22px; }
+    .free { font-size: 13px; color: var(--muted); margin-top: 9px; text-align: center; }
+
+    /* Screenshot strip, like the App Store */
+    .shots {
+      display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory;
+      padding: 22px 18px 4px; margin: 0 auto; max-width: 440px; scrollbar-width: none;
+    }
+    .shots::-webkit-scrollbar { display: none; }
+    .shots a { flex: none; width: 62%; scroll-snap-align: start; }
+    .shots img { width: 100%; display: block; border-radius: 18px; border: 1px solid var(--line); background: var(--surface); aspect-ratio: 1284 / 2778; }
+
+    .why { margin-top: 22px; }
+    .why div { padding: 14px 0; border-top: 1px solid var(--line); font-size: 15px; line-height: 1.4; color: #c4c4c4; }
+    .why b { display: block; color: #fff; font-size: 16px; margin-bottom: 2px; }
+    footer { margin-top: 24px; font-size: 12px; color: #666; text-align: center; }
     footer a { color: #888; }
+
+    /* Sticky download bar, shows once the main button scrolls away */
+    .bar {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+      padding: 10px 18px calc(10px + env(safe-area-inset-bottom));
+      background: rgba(10,10,10,.92); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border-top: 1px solid var(--line);
+      transform: translateY(110%); transition: transform .25s ease;
+    }
+    .bar.on { transform: none; }
+    .bar .cta { margin: 0 auto; max-width: 404px; padding: 15px 20px; }
   </style>
 </head>
 <body>
-  <img class="wordmark" src="wordmark.png" alt="Danzo">
+  <main class="wrap">
+    <a class="app go" href="https://eryogltkczyqqbczreum.supabase.co/functions/v1/go?s=web">
+      <img class="icon" src="icon.png" alt="Danzo app icon" width="72" height="72">
+      <div class="meta">
+        <div class="name">Danzo</div>
+        <div class="tag">See who's out in Dallas</div>
+      </div>
+      <span class="get">GET</span>
+    </a>
 
-  <h1>See who's out<br>in Dallas tonight.</h1>
-  <p class="sub">What's live near you in Dallas right now, game days, rooftops, run clubs, and who's there.</p>
+    <h1>See who's out.<br><span>Go say hi.</span></h1>
+    <p class="sub">Game days, rooftops, run clubs. See what's live near you in Dallas right now, and who's there.</p>
 
-  <a class="cta" id="cta" href="https://eryogltkczyqqbczreum.supabase.co/functions/v1/go?s=web">Get Danzo on the App Store</a>
-  <p class="free">Free on iPhone · Made in Dallas</p>
+    <a class="cta go" id="cta" href="https://eryogltkczyqqbczreum.supabase.co/functions/v1/go?s=web">
+      <svg viewBox="0 0 17 20" aria-hidden="true"><path fill="currentColor" d="M14.1 10.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.4-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.7 1.3 10.2.8 1.2 1.8 2.6 3.1 2.5 1.3 0 1.7-.8 3.3-.8 1.5 0 1.9.8 3.3.8 1.4 0 2.2-1.2 3-2.5 1-1.4 1.4-2.8 1.4-2.9 0 0-2.4-1-2.4-4zM11.6 3c.7-.8 1.2-2 1-3.1-1 0-2.2.7-2.9 1.5-.6.7-1.2 1.9-1 3 1.1.1 2.2-.6 2.9-1.4z"/></svg>
+      Get Danzo on the App Store
+    </a>
+    <p class="free">Free · iPhone · 18+ · Made in Dallas</p>
+  </main>
 
-  <img class="phone" src="phone-map.jpg" alt="The Danzo map showing live events around Knox-Henderson and University Park">
+  <div class="shots">
+    <a class="go" href="https://eryogltkczyqqbczreum.supabase.co/functions/v1/go?s=web"><img src="01_map.jpg" alt="Live map of events near you in Dallas" width="560" height="1211"></a>
+    <a class="go" href="https://eryogltkczyqqbczreum.supabase.co/functions/v1/go?s=web"><img src="02_spark.jpg" alt="Send a private spark to someone at the same event" width="560" height="1211" loading="lazy"></a>
+    <a class="go" href="https://eryogltkczyqqbczreum.supabase.co/functions/v1/go?s=web"><img src="05_match.jpg" alt="When you both spark, go say hi" width="560" height="1211" loading="lazy"></a>
+  </div>
 
-  <ul>
-    <li><b>Live map of what's happening</b>See events near you right now and how many people are there.</li>
-    <li><b>Say hi with a spark</b>Send a private spark to someone at the same event and go say hi.</li>
-    <li><b>Photos from tonight</b>Posts inside an event disappear when it ends.</li>
-  </ul>
+  <section class="wrap why">
+    <div><b>Know where everyone is</b>A live map of what's happening near you and how many people are there.</div>
+    <div><b>No awkward first move</b>Send a private spark to someone at the same spot. Only they see it, and nobody knows if they don't answer.</div>
+    <div><b>Day and night</b>Run clubs, coffee, game days, rooftops. Posts disappear when the event ends.</div>
+    <footer><a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a></footer>
+  </section>
 
-  <a class="cta cta2" id="cta2" href="https://eryogltkczyqqbczreum.supabase.co/functions/v1/go?s=web">Get Danzo, it's free</a>
-
-  <footer>18+ · <a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a></footer>
+  <div class="bar" id="bar">
+    <a class="cta go" href="https://eryogltkczyqqbczreum.supabase.co/functions/v1/go?s=web">Get Danzo, it's free</a>
+  </div>
 
   <script>
-    // Pass the traffic source (?s=ig_ad_traffic etc.) through to the tracked App Store link.
     (function () {
+      var GO = "https://eryogltkczyqqbczreum.supabase.co/functions/v1/go";
       var s = new URLSearchParams(location.search).get("s");
-      if (!s || !/^[a-z0-9_-]{1,40}$/i.test(s)) return;
-      ["cta", "cta2"].forEach(function (id) {
-        var a = document.getElementById(id);
-        a.href = a.href.replace(/s=web$/, "s=" + encodeURIComponent(s));
-      });
+      if (!s || !/^[a-z0-9_-]{1,40}$/i.test(s)) s = "web";
+      s = s.toLowerCase();
+      // Every download link carries the traffic source (?s=ig_ad_traffic etc.).
+      document.querySelectorAll("a.go").forEach(function (a) { a.href = GO + "?s=" + encodeURIComponent(s); });
+      // Count the page view as "lpv_<source>" so we can compare visits vs taps.
+      // It hits the same counter; it's never followed (redirect: manual).
+      try { fetch(GO + "?s=lpv_" + encodeURIComponent(s), { mode: "no-cors", redirect: "manual", keepalive: true, cache: "no-store" }); } catch (e) {}
+      // Sticky bar once the main button is off screen.
+      var cta = document.getElementById("cta"), bar = document.getElementById("bar");
+      if ("IntersectionObserver" in window) {
+        new IntersectionObserver(function (e) { bar.classList.toggle("on", !e[0].isIntersecting); }).observe(cta);
+      } else { bar.classList.add("on"); }
     })();
   </script>
 </body>
