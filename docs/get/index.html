@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Danzo · See who's out in Dallas</title>
+  <meta name="description" content="See what's live near you in Dallas right now, and who's there. Free on iPhone.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Danzo">
+  <meta property="og:title" content="Danzo · See who's out in Dallas">
+  <meta property="og:description" content="Game days, rooftops, run clubs. See what's live near you right now, and who's there.">
+  <meta property="og:image" content="https://jlucaslacy-oss.github.io/blackout-app/get/phone-map.jpg">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-itunes-app" content="app-id=6781531385">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { background: #000; color: #fff; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100svh;
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+      padding: max(28px, env(safe-area-inset-top)) 22px max(24px, env(safe-area-inset-bottom));
+      background: radial-gradient(120% 55% at 50% 0%, rgba(255,255,255,.11), transparent 60%), #000;
+    }
+    .wordmark { width: 170px; margin-top: 6px; }
+    h1 { font-size: 40px; line-height: 1.02; font-weight: 900; letter-spacing: -1.2px; margin-top: 28px; }
+    .sub { font-size: 17px; line-height: 1.4; color: #b8b8b8; margin-top: 12px; max-width: 340px; }
+    .cta {
+      display: block; width: 100%; max-width: 360px; margin-top: 24px;
+      background: #fff; color: #000; text-decoration: none;
+      font-size: 18px; font-weight: 800; padding: 17px 20px; border-radius: 16px;
+    }
+    .cta:active { transform: scale(.98); }
+    .free { font-size: 13px; color: #8a8a8a; margin-top: 10px; }
+    .phone { width: 74%; max-width: 280px; margin-top: 28px; border-radius: 34px; box-shadow: 0 30px 80px rgba(255,255,255,.08); }
+    ul { list-style: none; margin-top: 28px; max-width: 360px; width: 100%; text-align: left; }
+    li { padding: 14px 0; border-top: 1px solid #1d1d1d; font-size: 16px; line-height: 1.35; color: #d6d6d6; }
+    li b { color: #fff; display: block; font-size: 17px; margin-bottom: 2px; }
+    .cta2 { margin-top: 26px; }
+    footer { margin-top: 28px; font-size: 12px; color: #666; }
+    footer a { color: #888; }
+  </style>
+</head>
+<body>
+  <img class="wordmark" src="wordmark.png" alt="Danzo">
+
+  <h1>See who's out<br>in Dallas tonight.</h1>
+  <p class="sub">What's live near you in Dallas right now, game days, rooftops, run clubs, and who's there.</p>
+
+  <a class="cta" id="cta" href="https://eryogltkczyqqbczreum.supabase.co/functions/v1/go?s=web">Get Danzo on the App Store</a>
+  <p class="free">Free on iPhone · Made in Dallas</p>
+
+  <img class="phone" src="phone-map.jpg" alt="The Danzo map showing live events around Knox-Henderson and University Park">
+
+  <ul>
+    <li><b>Live map of what's happening</b>See events near you right now and how many people are there.</li>
+    <li><b>Say hi with a spark</b>Send a private spark to someone at the same event and go say hi.</li>
+    <li><b>Photos from tonight</b>Posts inside an event disappear when it ends.</li>
+  </ul>
+
+  <a class="cta cta2" id="cta2" href="https://eryogltkczyqqbczreum.supabase.co/functions/v1/go?s=web">Get Danzo, it's free</a>
+
+  <footer>18+ · <a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a></footer>
+
+  <script>
+    // Pass the traffic source (?s=ig_ad_traffic etc.) through to the tracked App Store link.
+    (function () {
+      var s = new URLSearchParams(location.search).get("s");
+      if (!s || !/^[a-z0-9_-]{1,40}$/i.test(s)) return;
+      ["cta", "cta2"].forEach(function (id) {
+        var a = document.getElementById(id);
+        a.href = a.href.replace(/s=web$/, "s=" + encodeURIComponent(s));
+      });
+    })();
+  </script>
+</body>
+</html>
