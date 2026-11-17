@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Danzo · TikTok connected</title>
+  <style>
+    :root { --bg: #0a0a0a; --text: #fff; --muted: #8a8a8a; --line: #262626; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, system-ui, sans-serif; }
+    main { max-width: 520px; margin: 0 auto; padding: 48px 18px; }
+    h1 { font-size: 24px; margin: 0 0 8px; }
+    p { color: var(--muted); line-height: 1.45; }
+    code { display: block; margin-top: 16px; padding: 14px; border: 1px solid var(--line); border-radius: 12px; word-break: break-all; font-size: 14px; }
+    button { margin-top: 12px; width: 100%; padding: 14px; border: 0; border-radius: 12px; background: #fff; color: #000; font-weight: 700; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1 id="t">Connecting TikTok…</h1>
+    <p id="m">Copy this code and paste it back in the Danzo marketing chat.</p>
+    <code id="c"></code>
+    <button id="b" type="button">Copy code</button>
+  </main>
+  <script>
+    var q = new URLSearchParams(location.search), code = q.get("code"), err = q.get("error");
+    var c = document.getElementById("c"), b = document.getElementById("b");
+    if (code) { document.getElementById("t").textContent = "TikTok connected"; c.textContent = code; }
+    else {
+      document.getElementById("t").textContent = err ? "TikTok said: " + err : "No code here";
+      document.getElementById("m").textContent = q.get("error_description") || "Open the login link again.";
+      c.style.display = b.style.display = "none";
+    }
+    b.onclick = function () { navigator.clipboard.writeText(code).then(function () { b.textContent = "Copied"; }); };
+  </script>
+</body>
+</html>
