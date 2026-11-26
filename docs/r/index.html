@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>You're invited to Danzo.</title>
+  <meta name="description" content="See who's out. Then decide.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Danzo">
+  <meta property="og:title" content="You're invited to Danzo.">
+  <meta property="og:description" content="See who's out. Then decide.">
+  <meta property="og:image" content="https://jlucaslacy-oss.github.io/blackout-app/r/og-v3.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#F1EBDD">
+  <meta name="apple-itunes-app" content="app-id=6781531385">
+  <style>
+    @font-face { font-family: "Instrument Serif"; src: url("serif.ttf") format("truetype"); font-display: swap; }
+    :root { --paper: #F1EBDD; --ink: #0F0F0D; --ink2: #4C4942; }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { background: var(--paper); color: var(--ink); }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      padding: max(16px, env(safe-area-inset-top)) 0 max(28px, env(safe-area-inset-bottom));
+    }
+    a { color: inherit; text-decoration: none; }
+    .wrap { max-width: 440px; margin: 0 auto; padding: 0 22px; }
+    .mast { display: flex; align-items: center; justify-content: space-between; padding: 6px 0 14px; border-bottom: 1px solid var(--ink); }
+    .mast b { font-family: "Instrument Serif", Georgia, serif; font-weight: 400; font-size: 28px; }
+    .mast img { width: 40px; height: 40px; border-radius: 10px; }
+    h1 { font-family: "Instrument Serif", Georgia, serif; font-weight: 400; font-size: 46px; line-height: 1.0; letter-spacing: -.5px; margin-top: 34px; }
+    .sub { font-size: 17px; line-height: 1.45; color: var(--ink2); margin-top: 14px; }
+    .code { margin-top: 30px; padding: 18px 0; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); text-align: center; }
+    .code small { display: block; font-size: 13px; color: var(--ink2); font-weight: 500; }
+    .code strong { display: block; font-family: "Instrument Serif", Georgia, serif; font-weight: 400; font-size: 54px; letter-spacing: 7px; margin-top: 2px; }
+    .btn { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 54px; border-radius: 8px; font-size: 17px; font-weight: 600; margin-top: 12px; border: 1px solid var(--ink); background: transparent; color: var(--ink); font-family: inherit; cursor: pointer; }
+    .btn.primary { background: var(--ink); color: var(--paper); margin-top: 26px; }
+    .btn:active { transform: scale(.985); }
+    ol { margin-top: 30px; padding-left: 0; list-style: none; border-top: 1px solid var(--ink); }
+    li { padding: 14px 0; border-bottom: 1px solid var(--ink); font-size: 15px; line-height: 1.4; display: flex; gap: 12px; }
+    li span { font-family: "Instrument Serif", Georgia, serif; font-size: 22px; line-height: 1; min-width: 18px; }
+    .fine { font-size: 12px; color: var(--ink2); margin-top: 22px; line-height: 1.5; }
+    .fine a { text-decoration: underline; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="mast"><b>Danzo</b><img src="icon.png" alt="" width="40" height="40"></div>
+
+    <h1>Come out with me on&nbsp;Danzo.</h1>
+    <p class="sub">See who's out in Dallas tonight, and where. Then go.</p>
+
+    <div class="code" id="codeBox">
+      <small>Invite code</small>
+      <strong id="code">······</strong>
+    </div>
+
+    <a class="btn primary" id="get" href="https://eryogltkczyqqbczreum.supabase.co/functions/v1/go?s=ref">Get Danzo on the App Store</a>
+    <a class="btn" id="open" href="blackout://r">I have Danzo. Open it</a>
+    <button class="btn" id="copy" type="button">Copy code</button>
+
+    <ol>
+      <li><span>1</span>Get Danzo and sign up.</li>
+      <li><span>2</span>Come back to this page and tap "I have Danzo. Open it". Or enter the code on the Invite screen.</li>
+      <li><span>3</span>Finish your profile. That's it.</li>
+    </ol>
+
+    <p class="fine">iPhone only. Danzo is for adults 18+. <a href="../terms.html">Terms</a> · <a href="../privacy.html">Privacy</a></p>
+  </main>
+  <script>
+    (function () {
+      var raw = new URLSearchParams(location.search).get("c") || "";
+      var code = raw.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12);
+      var codeEl = document.getElementById("code");
+      var copyBtn = document.getElementById("copy");
+      var openBtn = document.getElementById("open");
+      if (code) {
+        codeEl.textContent = code;
+        openBtn.href = "blackout://r?c=" + encodeURIComponent(code);
+      } else {
+        document.getElementById("codeBox").classList.add("hidden");
+        copyBtn.classList.add("hidden");
+        openBtn.href = "blackout://";
+      }
+      copyBtn.addEventListener("click", function () {
+        function done() { copyBtn.textContent = "Code copied"; }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).then(done, function () {});
+        } else {
+          var r = document.createRange(); r.selectNodeContents(codeEl);
+          var s = getSelection(); s.removeAllRanges(); s.addRange(r);
+          try { document.execCommand("copy"); done(); } catch (e) {}
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
